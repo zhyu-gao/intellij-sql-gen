@@ -45,4 +45,16 @@ tasks {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
+    
+    // 发布到 JetBrains Marketplace
+    publishPlugin {
+        // 从环境变量获取 Token，或者在这里硬编码（不推荐）
+        token = System.getenv("JETBRAINS_TOKEN") ?: ""
+        
+        // 可选：指定发布的渠道，默认为 "default"
+        // channels = listOf("default")
+        
+        // 可选：添加发布说明
+        // changelog = file("CHANGELOG.md").readText()
+    }
 }

@@ -1,15 +1,44 @@
 <idea-plugin>
     <id>com.plugins.sqlgen</id>
     <name>SQL Select Generator</name>
-    <vendor email="dev@example.com" url="https://example.com">SQL Gen</vendor>
+    <version>0.0.1</version>
+    <vendor email="your-email@example.com" url="https://github.com/zhyu-gao/intellij-sql-gen">SQL Gen Team</vendor>
 
     <description><![CDATA[
-    Generate SELECT SQL statements from database tables.
-    Features:
-    - Right-click on database table to generate SELECT statement
-    - Select/deselect columns
-    - Optional table alias support
+    <h2>SQL Select Generator</h2>
+    <p>A simple and efficient IntelliJ IDEA plugin for generating SELECT SQL statements from database tables.</p>
+    
+    <h3>Features:</h3>
+    <ul>
+        <li>Right-click on any database table to generate SELECT statement</li>
+        <li>Select/deselect specific columns with a user-friendly checkbox interface</li>
+        <li>Optional table alias support</li>
+        <li>One-click copy generated SQL to clipboard</li>
+        <li>Real-time SQL preview</li>
+    </ul>
+    
+    <h3>How to use:</h3>
+    <ol>
+        <li>Open Database tool window in IntelliJ IDEA</li>
+        <li>Right-click on any table</li>
+        <li>Select "Generate SELECT Statement"</li>
+        <li>Choose columns and optional alias</li>
+        <li>Copy or insert the generated SQL</li>
+    </ol>
     ]]></description>
+    
+    <change-notes><![CDATA[
+    <h3>Version 1.0.0</h3>
+    <ul>
+        <li>Initial release</li>
+        <li>Support for generating SELECT statements from database tables</li>
+        <li>Column selection with checkboxes</li>
+        <li>Table alias support</li>
+        <li>One-click copy functionality</li>
+    </ul>
+    ]]></change-notes>
+
+    <idea-version since-build="253"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.database</depends>

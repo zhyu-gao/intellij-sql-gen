@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "WebSearch",
+      "WebFetch(domain:plugins.jetbrains.com)",
+      "Bash(cd \"D:/project/tool_proj/idea-tools\" && \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-21.0.6.7-hotspot\\\\bin\\\\java\" --version 2>&1 || where java 2>&1)",
+      "Bash(cd:*)",
+      "Bash(cd \"D:/project/tool_proj/idea-tools\" && ./gradlew.bat printBundledPlugins 2>&1)"
+    ]
+  }
+}

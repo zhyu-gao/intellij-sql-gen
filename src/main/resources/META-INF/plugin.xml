@@ -1,0 +1,25 @@
+<idea-plugin>
+    <id>com.plugins.sqlgen</id>
+    <name>SQL Select Generator</name>
+    <vendor email="dev@example.com" url="https://example.com">SQL Gen</vendor>
+
+    <description><![CDATA[
+    Generate SELECT SQL statements from database tables.
+    Features:
+    - Right-click on database table to generate SELECT statement
+    - Select/deselect columns
+    - Optional table alias support
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.database</depends>
+
+    <actions>
+        <action id="com.plugins.sqlgen.action.GenerateSelectAction"
+                class="com.plugins.sqlgen.action.GenerateSelectAction"
+                text="Generate SELECT Statement"
+                description="Generate SELECT SQL statement for selected table">
+            <add-to-group group-id="DatabaseViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

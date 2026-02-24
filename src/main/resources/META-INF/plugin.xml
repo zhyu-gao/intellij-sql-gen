@@ -2,7 +2,7 @@
     <id>com.plugins.sqlgen</id>
     <name>SQL Select Generator</name>
     <version>0.0.1</version>
-    <vendor email="your-email@example.com" url="https://github.com/zhyu-gao/intellij-sql-gen">SQL Gen Team</vendor>
+    <vendor email="zhyu.gao@gmail.com" url="https://github.com/zhyu-gao/intellij-sql-gen">SQL Gen Team</vendor>
 
     <description><![CDATA[
     <h2>SQL Select Generator</h2>

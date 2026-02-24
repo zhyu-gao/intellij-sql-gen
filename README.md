@@ -72,4 +72,4 @@ cd intellij-sql-gen
 ## 👤 作者
 
 - GitHub: [@zhyu-gao](https://github.com/zhyu-gao)
-- 邮箱: your-email@example.com
+- 邮箱: zhyu.gao@gmail.com

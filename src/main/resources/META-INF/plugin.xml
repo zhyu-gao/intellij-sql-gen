@@ -50,5 +50,13 @@
                 description="Generate SELECT SQL statement for selected table">
             <add-to-group group-id="DatabaseViewPopupMenu" anchor="last"/>
         </action>
+
+        <action id="com.plugins.sqlgen.action.CopyFilePathWithLineAction"
+                class="com.plugins.sqlgen.action.CopyFilePathWithLineAction"
+                text="Copy File Path with Line Number"
+                description="Copy file path and selected line number(s) to clipboard">
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="CopyReference"/>
+            <add-to-group group-id="MainToolbarRight" anchor="last"/>
+        </action>
     </actions>
 </idea-plugin>

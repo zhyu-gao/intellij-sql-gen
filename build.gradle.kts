@@ -57,9 +57,9 @@ tasks {
         token = System.getenv("JETBRAINS_TOKEN") ?: ""
         
         // 可选：指定发布的渠道，默认为 "default"
-        channels = listOf("default")
+//        channels = listOf("default")
         
         // 可选：添加发布说明
-        changelog = file("CHANGELOG.md").readText()
+//        changelog = file("CHANGELOG.md").readText()
     }
 }

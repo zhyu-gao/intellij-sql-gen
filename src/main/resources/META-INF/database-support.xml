@@ -1,0 +1,4 @@
+<idea-plugin>
+    <!-- WebStorm-specific configuration for database support -->
+    <depends>com.intellij.modules.database</depends>
+</idea-plugin>

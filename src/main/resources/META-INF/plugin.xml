@@ -41,8 +41,7 @@
     <idea-version since-build="253"/>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.database</depends>
-
+    <depends optional="true" config-file="database-support">com.intellij.modules.database</depends>
     <actions>
         <action id="com.plugins.sqlgen.action.GenerateSelectAction"
                 class="com.plugins.sqlgen.action.GenerateSelectAction"

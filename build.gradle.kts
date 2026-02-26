@@ -45,7 +45,12 @@ tasks {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
-    
+    // 发布到 JetBrains Marketplace
+    // publishPlugin {
+    //     token = System.getenv("JETBRAINS_TOKEN") ?: ""
+    //     channels = listOf("default")
+    //     changelog = file("CHANGELOG.md").readText()
+    // }
     // 发布到 JetBrains Marketplace
     publishPlugin {
         // 从环境变量获取 Token，或者在这里硬编码（不推荐）

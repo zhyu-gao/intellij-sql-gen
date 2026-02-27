@@ -17,3 +17,4 @@ local.properties
 ## 忽略日志文件
 *.log
 .omc
+.intellijPlatform

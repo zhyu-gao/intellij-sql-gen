@@ -5,248 +5,252 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
-import com.intellij.util.ui.FormBuilder
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import com.plugins.sqlgen.model.ColumnInfo
 import com.plugins.sqlgen.util.SelectGenerator
 import java.awt.BorderLayout
-import java.awt.Component
 import java.awt.Container
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
+import java.awt.GraphicsEnvironment
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.Insets
+import java.awt.Color
 import java.awt.datatransfer.StringSelection
 import javax.swing.*
+import javax.swing.border.CompoundBorder
 import javax.swing.border.EmptyBorder
+import javax.swing.border.LineBorder
+import javax.swing.border.TitledBorder
 import java.awt.Toolkit
 
-/**
- * 生成 SELECT 语句的对话框
- */
 class SelectGeneratorDialog(private val tableName: String, private val columns: List<ColumnInfo>) : DialogWrapper(true) {
 
     private val columnCheckboxes: MutableList<JBCheckBox> = mutableListOf()
     private val aliasTextField: JBTextField = JBTextField()
     private val selectAllCheckBox: JBCheckBox = JBCheckBox("全选/全不选")
     private val previewTextArea: JTextArea = JTextArea(5, 40)
-    private val generateButton: JButton = JButton("生成 SQL")
 
     init {
         init()
-        title = "生成 SELECT 语句 - $tableName"
+        title = "SQL 生成器"
     }
 
     override fun createCenterPanel(): JComponent {
-        previewTextArea.lineWrap = true
-        previewTextArea.wrapStyleWord = true
-        previewTextArea.isEditable = false
-        previewTextArea.font = UIUtil.getFontWithFallback("Monospaced", java.awt.Font.PLAIN, 12)
-
-        // 表信息面板
-        val infoPanel = JPanel(BorderLayout()).apply {
-            border = EmptyBorder(0, 0, 10, 0)
-            add(JBLabel("表名：$tableName"), BorderLayout.WEST)
+        val mainPanel = JPanel(BorderLayout()).apply {
+            border = EmptyBorder(16, 20, 16, 20)
         }
 
-        // 别名输入面板
-        val aliasPanel = JPanel(BorderLayout()).apply {
-            border = EmptyBorder(0, 0, 10, 0)
-            val label = JBLabel("表别名 (可选):")
-            label.preferredSize = Dimension(100, label.preferredSize.height)
-            add(label, BorderLayout.WEST)
-            aliasTextField.preferredSize = Dimension(150, aliasTextField.preferredSize.height)
-            add(aliasTextField, BorderLayout.CENTER)
-            aliasTextField.emptyText.text = "留空表示不使用别名"
+        val contentPanel = JPanel(GridBagLayout())
+        val gbc = GridBagConstraints().apply {
+            fill = GridBagConstraints.HORIZONTAL
+            anchor = GridBagConstraints.WEST
+            insets = Insets(0, 0, 12, 0)
+            weightx = 1.0
+            gridwidth = GridBagConstraints.REMAINDER
         }
 
-        // 字段选择面板 - 使用 WrapLayout 实现横向排列，自动换行
-        val columnsWrapperPanel = JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            border = EmptyBorder(10, 0, 10, 0)
+        contentPanel.add(createHeaderPanel(), gbc)
 
-            // 全选/全不选
-            add(selectAllCheckBox)
-            add(Box.createVerticalStrut(5))
-            add(JSeparator().apply { maximumSize = Dimension(Int.MAX_VALUE, 2) })
-            add(Box.createVerticalStrut(5))
+        gbc.insets = Insets(0, 0, 16, 0)
+        contentPanel.add(createAliasPanel(), gbc)
 
-            // 字段复选框容器 - 使用 WrapLayout 实现横向排列，自动换行
-            val columnsPanel = JPanel(WrapLayout(FlowLayout.LEFT, 5, 5)).apply {
-                // 创建字段复选框列表
-                columns.forEach { column ->
-                    val checkBox = JBCheckBox(column.name).apply {
-                        isSelected = column.selected
-                        toolTipText = buildString {
-                            append("可空：${if (column.nullable) "是" else "否"}")
-                            column.defaultValue?.let { append(" | 默认值：$it") }
-                            column.comment?.let { append(" | 注释：$it") }
-                        }
-                        // 添加选中变化监听，实时更新预览
-                        addActionListener { updatePreview() }
-                    }
-                    columnCheckboxes.add(checkBox)
-                    add(checkBox)
-                }
-            }
+        gbc.fill = GridBagConstraints.BOTH
+        gbc.weighty = 1.0
+        contentPanel.add(createColumnsPanel(), gbc)
 
-            // 将字段面板包装在滚动面板中
-            add(JScrollPane(columnsPanel).apply {
-                border = null
-                preferredSize = Dimension(400, 150)
-                verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
-                horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-            })
-        }
+        gbc.fill = GridBagConstraints.HORIZONTAL
+        gbc.weighty = 0.0
+        gbc.insets = Insets(0, 0, 12, 0)
+        contentPanel.add(createButtonPanel(), gbc)
 
-        // 全选/全不选事件
-        selectAllCheckBox.addActionListener {
-            val newState = selectAllCheckBox.isSelected
-            columnCheckboxes.forEach { it.isSelected = newState }
-            updatePreview()
-        }
+        gbc.insets = Insets(0, 0, 0, 0)
+        contentPanel.add(createPreviewPanel(), gbc)
 
-        // 别名变化监听
-        aliasTextField.document.addDocumentListener(object : javax.swing.event.DocumentListener {
-            override fun insertUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-            override fun removeUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-            override fun changedUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-        })
+        mainPanel.add(contentPanel, BorderLayout.CENTER)
+        updatePreview()
 
-        // 生成按钮
-        generateButton.addActionListener {
-            doOKAction()
-        }
+        return mainPanel
+    }
 
-        // SQL 预览面板
-        val previewPanel = JPanel(BorderLayout()).apply {
-            border = EmptyBorder(10, 0, 0, 0)
-            add(JBLabel("SQL 预览："), BorderLayout.NORTH)
-            add(JScrollPane(previewTextArea).apply {
-                preferredSize = Dimension(400, 100)
+    private fun createHeaderPanel(): JPanel {
+        return JPanel(BorderLayout()).apply {
+            border = CompoundBorder(
+                LineBorder(UIManager.getColor("Component.borderColor"), 1, true),
+                EmptyBorder(12, 16, 12, 16)
+            )
+
+            val leftPanel = JPanel(FlowLayout(FlowLayout.LEFT, 8, 0))
+            leftPanel.add(JLabel("📋").apply { font = Font("Segoe UI Emoji", Font.PLAIN, 20) })
+            leftPanel.add(JBLabel("数据表:").apply { font = UIUtil.getLabelFont().deriveFont(Font.BOLD) })
+            add(leftPanel, BorderLayout.WEST)
+
+            add(JBLabel(tableName).apply {
+                font = UIUtil.getLabelFont().deriveFont(Font.BOLD, 14f)
+                foreground = UIManager.getColor("Link.activeForeground")
             }, BorderLayout.CENTER)
         }
+    }
 
-        // 按钮面板
-        val buttonPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
-            add(generateButton)
-            add(Box.createHorizontalStrut(10))
-            add(JButton("一键复制 SQL").apply {
+    private fun createAliasPanel(): JPanel {
+        return JPanel(BorderLayout(12, 0)).apply {
+            add(JBLabel("表别名:").apply { preferredSize = Dimension(70, preferredSize.height) }, BorderLayout.WEST)
+            add(aliasTextField.apply {
+                emptyText.text = "可选，如: t1"
+                toolTipText = "为表设置别名，生成的 SQL 将使用别名引用字段"
+            }, BorderLayout.CENTER)
+
+            document.addDocumentListener(object : javax.swing.event.DocumentListener {
+                override fun insertUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+                override fun removeUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+                override fun changedUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+            })
+        }
+    }
+
+    private fun createColumnsPanel(): JPanel {
+        val panel = JPanel(BorderLayout()).apply {
+            border = TitledBorder(
+                CompoundBorder(LineBorder(UIManager.getColor("Component.borderColor")), EmptyBorder(8, 8, 8, 8)),
+                "选择字段 (${columns.size}个)",
+                TitledBorder.LEADING,
+                TitledBorder.TOP,
+                UIUtil.getLabelFont().deriveFont(Font.BOLD),
+                UIManager.getColor("Label.foreground")
+            )
+        }
+
+        val toolbarPanel = JPanel(BorderLayout()).apply {
+            border = EmptyBorder(0, 0, 8, 0)
+            add(selectAllCheckBox.apply {
+                isSelected = true
+                addActionListener {
+                    val newState = isSelected
+                    columnCheckboxes.forEach { it.isSelected = newState }
+                    updatePreview()
+                }
+            }, BorderLayout.WEST)
+        }
+        panel.add(toolbarPanel, BorderLayout.NORTH)
+
+        val columnsContainer = JPanel(WrapLayout(FlowLayout.LEFT, 10, 8)).apply {
+            columns.forEach { column ->
+                val checkBox = JBCheckBox(column.name).apply {
+                    isSelected = column.selected
+                    toolTipText = buildString {
+                        append("<html><b>字段:</b> ${column.name}<br><b>可空:</b> ${if (column.nullable) "是" else "否"}")
+                        column.defaultValue?.let { append("<br><b>默认值:</b> $it") }
+                        column.comment?.let { append("<br><b>注释:</b> $it") }
+                        append("</html>")
+                    }
+                    addActionListener { updatePreview() }
+                }
+                columnCheckboxes.add(checkBox)
+                add(checkBox)
+            }
+        }
+
+        panel.add(JScrollPane(columnsContainer).apply {
+            border = null
+            preferredSize = Dimension(400, 180)
+            verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        }, BorderLayout.CENTER)
+
+        return panel
+    }
+
+    private fun createButtonPanel(): JPanel {
+        return JPanel(FlowLayout(FlowLayout.LEFT, 12, 0)).apply {
+            add(JButton("📋 复制 SQL").apply {
+                font = UIUtil.getLabelFont().deriveFont(Font.BOLD)
+                toolTipText = "复制生成的 SQL 到剪贴板"
                 addActionListener {
                     val sql = previewTextArea.text
                     if (sql.isNotBlank() && !sql.startsWith("-- 错误")) {
                         Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(sql), null)
                         val originalText = text
-                        text = "已复制!"
-                        Timer(2000) { text = originalText }.apply {
-                            isRepeats = false
-                            start()
-                        }
+                        text = "✓ 已复制!"
+                        Timer(2000) { text = originalText }.apply { isRepeats = false; start() }
                     } else {
-                        Messages.showErrorDialog(this@SelectGeneratorDialog.rootPane, "没有可复制的 SQL", "复制失败")
+                        Messages.showErrorDialog(rootPane, "没有可复制的 SQL", "复制失败")
                     }
                 }
             })
+
+            add(JButton("插入到编辑器 →").apply {
+                toolTipText = "将 SQL 插入到当前编辑器光标位置"
+                addActionListener { doOKAction() }
+            })
         }
-
-        // 使用 FormBuilder 创建表单布局
-        val formPanel = FormBuilder.createFormBuilder()
-            .addComponent(infoPanel)
-            .addComponent(aliasPanel)
-            .addComponent(JBLabel("选择字段:"))
-            .addComponent(columnsWrapperPanel)
-            .addComponent(buttonPanel)
-            .addComponent(previewPanel)
-            .panel
-
-        // 添加滚动支持
-        val scrollPane = JScrollPane(formPanel).apply {
-            verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
-            horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-            border = null
-            preferredSize = Dimension(450, 400)
-        }
-
-        // 初始更新预览
-        updatePreview()
-
-        return scrollPane
     }
 
-    /**
-     * 更新 SQL 预览
-     */
+    private fun createPreviewPanel(): JPanel {
+        val panel = JPanel(BorderLayout()).apply {
+            border = TitledBorder(
+                CompoundBorder(LineBorder(UIManager.getColor("Component.borderColor")), EmptyBorder(8, 8, 8, 8)),
+                "SQL 预览",
+                TitledBorder.LEADING,
+                TitledBorder.TOP,
+                UIUtil.getLabelFont().deriveFont(Font.BOLD),
+                UIManager.getColor("Label.foreground")
+            )
+        }
+
+        previewTextArea.apply {
+            font = GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames.let { fonts ->
+                when {
+                    fonts.contains("JetBrains Mono") -> Font("JetBrains Mono", Font.PLAIN, 13)
+                    fonts.contains("Consolas") -> Font("Consolas", Font.PLAIN, 13)
+                    else -> Font(Font.MONOSPACED, Font.PLAIN, 13)
+                }
+            }
+            lineWrap = true
+            wrapStyleWord = true
+            isEditable = false
+            background = Color(250, 250, 250)
+            foreground = Color(51, 51, 51)
+            border = EmptyBorder(12, 12, 12, 12)
+        }
+
+        panel.add(JScrollPane(previewTextArea).apply {
+            border = LineBorder(Color(221, 221, 221), 1)
+            preferredSize = Dimension(400, 120)
+        }, BorderLayout.CENTER)
+
+        return panel
+    }
+
     private fun updatePreview() {
         val selectedColumns = getSelectedColumns()
         val alias = getAlias().takeIf { it.isNotBlank() }
-        val sql = SelectGenerator.generateSelect(tableName, selectedColumns, alias)
-        previewTextArea.text = sql
+        previewTextArea.text = SelectGenerator.generateSelect(tableName, selectedColumns, alias)
     }
 
-    override fun getPreferredFocusedComponent(): JComponent? {
-        return aliasTextField
-    }
+    override fun getPreferredFocusedComponent() = aliasTextField
 
     override fun doOKAction() {
         if (columnCheckboxes.none { it.isSelected }) {
-            Messages.showErrorDialog(
-                this.rootPane,
-                "请至少选择一个字段",
-                "验证失败"
-            )
+            Messages.showErrorDialog(rootPane, "请至少选择一个字段", "验证失败")
             return
         }
         super.doOKAction()
     }
 
-    /**
-     * 获取选中的字段列表
-     */
-    fun getSelectedColumns(): List<String> {
-        return columnCheckboxes
-            .filter { it.isSelected }
-            .map { it.text }
-    }
-
-    /**
-     * 获取表别名
-     */
-    fun getAlias(): String {
-        return aliasTextField.text.trim()
-    }
-
-    /**
-     * 是否有别名
-     */
-    fun hasAlias(): Boolean {
-        return aliasTextField.text.isNotBlank()
-    }
-
-    /**
-     * 获取生成的 SQL
-     */
-    fun getGeneratedSql(): String {
-        val selectedColumns = getSelectedColumns()
-        val alias = getAlias().takeIf { it.isNotBlank() }
-        return SelectGenerator.generateSelect(tableName, selectedColumns, alias)
-    }
+    fun getSelectedColumns() = columnCheckboxes.filter { it.isSelected }.map { it.text }
+    fun getAlias() = aliasTextField.text.trim()
+    fun hasAlias() = aliasTextField.text.isNotBlank()
+    fun getGeneratedSql() = SelectGenerator.generateSelect(tableName, getSelectedColumns(), getAlias().takeIf { it.isNotBlank() })
 }
 
-/**
- * WrapLayout - FlowLayout 的变种，支持自动换行
- * 当组件在一行中放不下时，会自动换行到下一行
- */
 class WrapLayout : FlowLayout {
     constructor() : super()
     constructor(align: Int, hgap: Int, vgap: Int) : super(align, hgap, vgap)
 
-    override fun preferredLayoutSize(target: Container): Dimension {
-        return layoutSize(target, true)
-    }
-
-    override fun minimumLayoutSize(target: Container): Dimension {
-        return layoutSize(target, false)
-    }
+    override fun preferredLayoutSize(target: Container) = layoutSize(target, true)
+    override fun minimumLayoutSize(target: Container) = layoutSize(target, false)
 
     private fun layoutSize(target: Container?, preferred: Boolean): Dimension {
         synchronized(target!!.treeLock) {
@@ -274,8 +278,7 @@ class WrapLayout : FlowLayout {
                     rowMaxWidth = maxOf(rowMaxWidth, x)
                 }
             }
-            return Dimension(insets.left + insets.right + rowMaxWidth - hgap,
-                           insets.top + insets.bottom + y + rowTotalHeight)
+            return Dimension(insets.left + insets.right + rowMaxWidth - hgap, insets.top + insets.bottom + y + rowTotalHeight)
         }
     }
 

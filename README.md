@@ -1,5 +1,12 @@
 # SQL Select Generator
 
+[![Version](https://img.shields.io/jetbrains/plugin/v/30345.svg)](https://plugins.jetbrains.com/plugin/30345)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/30345.svg)](https://plugins.jetbrains.com/plugin/30345)
+
+<a href="https://plugins.jetbrains.com/plugin/30345" target="_blank">
+  <img src="https://resources.jetbrains.com/storage/jetbrains-ide/img/jb_ide_logo.svg" alt="Get from Marketplace" width="150" />
+</a>
+
 一个简单高效的 IntelliJ IDEA 插件，用于从数据库表生成 SELECT SQL 语句。
 
 ## ✨ 功能特性

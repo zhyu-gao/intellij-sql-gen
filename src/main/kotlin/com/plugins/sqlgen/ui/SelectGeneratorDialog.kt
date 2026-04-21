@@ -100,13 +100,12 @@ class SelectGeneratorDialog(private val tableName: String, private val columns: 
             add(aliasTextField.apply {
                 emptyText.text = "可选，如: t1"
                 toolTipText = "为表设置别名，生成的 SQL 将使用别名引用字段"
+                document.addDocumentListener(object : javax.swing.event.DocumentListener {
+                    override fun insertUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+                    override fun removeUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+                    override fun changedUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
+                })
             }, BorderLayout.CENTER)
-
-            document.addDocumentListener(object : javax.swing.event.DocumentListener {
-                override fun insertUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-                override fun removeUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-                override fun changedUpdate(e: javax.swing.event.DocumentEvent?) { updatePreview() }
-            })
         }
     }
 

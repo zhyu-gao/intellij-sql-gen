@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.plugins.sqlgen</id>
     <name>SQL Select Generator</name>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <vendor email="zhyu.gao@gmail.com" url="https://github.com/zhyu-gao/intellij-sql-gen">SQL Gen Team</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@
     </ul>
     ]]></change-notes>
 
-    <idea-version since-build="253"/>
+    <idea-version since-build="253" until-build="261.*"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="database-support">com.intellij.modules.database</depends>

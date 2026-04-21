@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.plugins.sqlgen"
-version = "0.0.3"
+version = "0.0.4"
 
 repositories {
     mavenCentral()
@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdea("2025.3.3")
+        intellijIdea("2026.1")
         bundledPlugin("com.intellij.database")
         instrumentationTools()
         pluginVerifier()
@@ -29,7 +29,7 @@ intellijPlatform {
         version = project.version.toString()
         ideaVersion {
             sinceBuild = "253"
-            untilBuild = "263.*"
+            untilBuild = "261.*"
         }
     }
 }

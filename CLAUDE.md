@@ -47,9 +47,14 @@ The plugin follows standard IntelliJ Platform architecture:
 - **plugin.xml**: Declares actions and their group placements (DatabaseViewPopupMenu, EditorPopupMenu).
 - **database-support.xml**: Optional dependency configuration for the Database plugin.
 - **build.gradle.kts**:
-  - Target: IntelliJ IDEA 2025.3.3
+  - 编译基线: IntelliJ IDEA 2025.3（build 253，即 since-build 的最低版本）
+  - 兼容性验证目标: 2026.3（IU-263.7307.200）与 2025.3，`./gradlew verifyPlugin`
   - Bundled plugin: `com.intellij.database`
-  - Since build: 253 (2025.3), until build: 263
+  - Since build: 253 (2025.3), until build: 263.*
+  - Kotlin 2.4.21 / Gradle 8.14.4（2026.3 平台 Kotlin 库 metadata 为 2.4.0，KGP 必须 ≥ 2.4.x）
+  - 编译基线不要改成 2026.3：263 的 `FileEditorManager` 已 Kotlin 化，用 263 编译会被绑定到
+    `FileEditorManager.Companion`，在 253/261 上抛 `NoSuchFieldError`；且 263 平台字节码为 Java 25（class 69.0），
+    JDK 21 的 javac 读不了，Java 源码也无法参与编译
   - Supports both Ultimate and Community editions; WebStorm support via optional database dependency
 
 ## Key Patterns

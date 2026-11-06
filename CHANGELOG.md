@@ -1,3 +1,23 @@
+## [0.0.6] - 2026-11-06
+
+### 🛠️ Stability
+- 修复首次兼容性验证暴露的问题：可选依赖配置文件声明补全为 `database-support.xml`，消除插件结构缺陷
+- 编译基线收敛到最低支持版本 2025.3，修复 `FileEditorManager` 在 2026.3 中 Kotlin 化导致的 `NoSuchFieldError` 隐患
+- 通过 `verifyPlugin` 双版本校验：2025.3（253）与 2026.3（263）均为 Compatible
+
+---
+
+## [0.0.5] - 2026-11-06
+
+### ✨ Features
+- 升级兼容性，支持 IntelliJ IDEA 2026.3 版本（until-build 提升至 263.*）
+
+### 🛠️ Stability
+- 字段类型解析改用 `DasType`（`specification` / `description`），替换 2026.3 中已标记待移除的 `DasTypedObject.getDataType()`，并移除原有反射兜底逻辑
+- 工具链升级：Kotlin 2.4.21、Gradle 8.14.4
+
+---
+
 ## [0.0.4] - 2026-04-21
 
 ### ✨ Features

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.plugins.sqlgen</id>
     <name>SQL Select Generator</name>
-    <version>0.0.4</version>
+    <version>0.0.6</version>
     <vendor email="zhyu.gao@gmail.com" url="https://github.com/zhyu-gao/intellij-sql-gen">SQL Gen Team</vendor>
 
     <description><![CDATA[
@@ -28,6 +28,12 @@
     ]]></description>
     
     <change-notes><![CDATA[
+    <h3>Version 0.0.6</h3>
+    <ul>
+        <li>适配 IntelliJ IDEA 2026.3（build 263.*）</li>
+        <li>工具链升级：Kotlin 2.4.21、Gradle 8.14.4</li>
+        <li>字段类型解析迁移至 DasType API，兼容 2025.3 ~ 2026.3</li>
+    </ul>
     <h3>Version 1.0.0</h3>
     <ul>
         <li>Initial release</li>
@@ -38,10 +44,10 @@
     </ul>
     ]]></change-notes>
 
-    <idea-version since-build="253" until-build="261.*"/>
+    <idea-version since-build="253" until-build="263.*"/>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="database-support">com.intellij.modules.database</depends>
+    <depends optional="true" config-file="database-support.xml">com.intellij.modules.database</depends>
     <actions>
         <action id="com.plugins.sqlgen.action.GenerateSelectAction"
                 class="com.plugins.sqlgen.action.GenerateSelectAction"

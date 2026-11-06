@@ -1,11 +1,11 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.jetbrains.intellij.platform") version "2.11.0"
 }
 
 group = "com.plugins.sqlgen"
-version = "0.0.4"
+version = "0.0.6"
 
 repositories {
     mavenCentral()
@@ -16,9 +16,13 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdea("2026.1")
+        // 编译基线取"最低支持版本"而非最新版本：
+        // 插件声明 since-build 253，若用 2026.3（263）编译，Kotlin 会把 FileEditorManager.getInstance
+        // 绑定到 263 新增的 FileEditorManager.Companion，在 253/261 上抛 NoSuchFieldError。
+        // 同时 263 平台字节码为 Java 25（class 69.0），JDK 21 的 javac 无法读取，Java 源码也无法参与编译。
+        // 最新版本（2026.3）由下方 pluginVerification 负责验证。
+        intellijIdea("2025.3")
         bundledPlugin("com.intellij.database")
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
     }
@@ -29,7 +33,16 @@ intellijPlatform {
         version = project.version.toString()
         ideaVersion {
             sinceBuild = "253"
-            untilBuild = "261.*"
+            untilBuild = "263.*"
+        }
+    }
+
+    // 插件兼容性验证目标 IDE（verifyPlugin 依赖该配置）
+    pluginVerification {
+        ides {
+            create(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaUltimate, "2026.3")
+            create(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaUltimate, "2025.3")
+            // 如需覆盖全部 since-build 区间，替换为 recommended()
         }
     }
 }

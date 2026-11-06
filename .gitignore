@@ -18,3 +18,5 @@ local.properties
 *.log
 .omc
 .intellijPlatform
+## 忽略 WorkBuddy 本地工作目录
+.workbuddy/

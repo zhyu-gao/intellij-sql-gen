@@ -3,6 +3,7 @@ package com.plugins.sqlgen.action
 import com.intellij.database.model.DasColumn
 import com.intellij.database.psi.DbElement
 import com.intellij.database.psi.DbTable
+import com.intellij.database.types.DasType
 import com.intellij.database.util.DasUtil
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -120,32 +121,57 @@ class GenerateSelectAction : AnAction(), DumbAware {
             val children = table.children
             children.filterIsInstance<DbElement>()
                 .mapNotNull { element ->
-                    element.name?.let { name ->
-                        var typeName = "unknown"
-                        try {
-                            val presentableText = element.presentation?.presentableText
-                            val locationString = element.presentation?.locationString
-                            
-                            typeName = "p=${presentableText}, l=${locationString}"
-                            
-                            if (element is DasColumn) {
-                                @Suppress("DEPRECATION")
-                                val dt = element.dataType
-                                typeName += " | DasCol: dt=${dt?.typeName}, spec=${dt?.specification}, das=${try { element.javaClass.getMethod("getDasType").invoke(element)?.toString() } catch(e: Exception) { "no" }}"
-                            }
-                        } catch (e: Exception) {
-                            typeName = "err"
+                    val name = element.name
+                    var typeName = "unknown"
+                    try {
+                        val presentableText = element.presentation?.presentableText
+                        val locationString = element.presentation?.locationString
+
+                        if (!locationString.isNullOrBlank()) {
+                            typeName = locationString.trim()
+                        } else if (presentableText != null && presentableText.contains(":")) {
+                            typeName = presentableText.substringAfter(":").trim()
                         }
-                        
-                        ColumnInfo(
-                            name = name,
-                            type = typeName,
-                            selected = true
-                        )
+
+                        if (element is DasColumn) {
+                            val typeStr = resolveDasTypeName(element)
+                            if (typeStr.isNotBlank()) {
+                                typeName = typeStr
+                            }
+                        }
+                    } catch (e: Exception) {
+                        typeName = "err"
                     }
+
+                    ColumnInfo(
+                        name = name,
+                        type = typeName,
+                        selected = true
+                    )
                 }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    /**
+     * 从 DasType 解析字段类型展示串
+     *
+     * 2026.3 起 [com.intellij.database.model.DasTypedObject.getDataType] 已被标记为待移除，
+     * 统一改用 [com.intellij.database.types.DasType]（specification 优先，其次 description）。
+     */
+    private fun resolveDasTypeName(column: DasColumn): String {
+        return try {
+            val dasType: DasType? = column.dasType
+            if (dasType == null) {
+                ""
+            } else {
+                val spec: String? = dasType.specification
+                val desc: String? = dasType.description
+                spec?.takeIf { it.isNotBlank() } ?: desc.orEmpty()
+            }
+        } catch (e: Exception) {
+            ""
         }
     }
 
@@ -154,16 +180,16 @@ class GenerateSelectAction : AnAction(), DumbAware {
      */
     private fun createColumnInfo(column: DasColumn): ColumnInfo {
         var typeName = ""
-        
+
         try {
-            // 尝试从 DbElement 的 presentation (UI展示节点) 获取
+            // 优先从 DbElement 的 presentation (UI展示节点) 获取
             if (column is DbElement) {
                 // UI 上展示的 locationString 通常是像 "varchar(255)" 这样的灰字
                 val locStr = column.presentation?.locationString
                 if (!locStr.isNullOrBlank()) {
                     typeName = locStr.trim()
                 }
-                
+
                 // 如果 locationString 是空的，我们再看看 presentableText 是否带了冒号，比如 "id: bigint"
                 if (typeName.isEmpty()) {
                     val pText = column.presentation?.presentableText
@@ -173,32 +199,13 @@ class GenerateSelectAction : AnAction(), DumbAware {
                 }
             }
 
-            // 如果从 UI 上还是没获取到，尝试 fallback 获取内部的真实数据类型
+            // 从 UI 上没获取到，回退到 DasType
             if (typeName.isEmpty() || typeName == "unknown") {
-                @Suppress("DEPRECATION")
-                val dt = column.dataType
-                val typeStr = dt?.specification ?: dt?.typeName ?: ""
+                val typeStr = resolveDasTypeName(column)
                 if (typeStr.isNotBlank() && typeStr != "unknown") {
                     typeName = typeStr
                 }
             }
-            
-            // 如果上述都没有，尝试使用 DasUtil.getDataType 甚至反射
-            if (typeName.isEmpty() || typeName == "unknown") {
-                try {
-                    val getDataTypeMethod = DasUtil::class.java.methods.find { it.name == "getDataType" }
-                    if (getDataTypeMethod != null) {
-                        val dt = getDataTypeMethod.invoke(null, column)
-                        if (dt != null) {
-                            val typeStr = dt.javaClass.getMethod("getTypeName").invoke(dt)?.toString() ?: ""
-                            if (typeStr.isNotBlank() && typeStr != "unknown") {
-                                typeName = typeStr
-                            }
-                        }
-                    }
-                } catch(e: Exception) { }
-            }
-            
         } catch (e: Exception) {
             // ignore
         }
